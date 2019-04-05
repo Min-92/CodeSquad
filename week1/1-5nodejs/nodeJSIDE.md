@@ -17,7 +17,7 @@
 - 컴파일언어보단 느리지만 빠르게 수정 가능
 - 보안성이 떨어짐
 
-###javaScript
+### javaScript
 - script언어 형태
     - imperative(명령형)
     - functional(함수형)
@@ -105,6 +105,7 @@
 ## 조사식 Watch section
 - 직접 확인하고 싶은 변수를 설정, 확인 가능
 - 표현식도 사용 가능 // i*3
+- *주의사항* i = i*3 이런식으로 작성하면 코드에 반영됨
 
 ## Call stack
 - 함수의 호출 흐름을 볼 수 있다
