@@ -4,7 +4,7 @@
 - 기계어 -> 어셈블리어 -> C언어 순으로 개발
 - C-> C++, C##, Objective-C, Swift, Java, Python
 
-![listLang](./img/kindOfLasng.png)
+![listLang](./img/kindOfLang.png)
 
 ### 컴파일언어
 - C C++ java C# GO
@@ -44,7 +44,7 @@
 - IDE 통합 개발환경 (Intergrated Development Environment)
 - JavaScript IDE
 
-![JSIDE](./img/2018-textdeitor.png)
+![JSIDE](./img/2018-texteditor.png)
 
 ## 온라인 에디터
 - 코드를 간단히 테스트하고 다른사람과 공유할 필요가 있다
