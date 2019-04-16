@@ -95,6 +95,8 @@ class TodoList {
   }
 }
 
+
+
 const myTodo = new TodoList();
 myTodo.show("all");
 myTodo.show("todo");
