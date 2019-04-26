@@ -1,111 +1,136 @@
 const todoList = module.require('./data.js');
+const errorMessage = module.require('./errorMessage.js');
+module.require('date-utils');
+
 module.exports = class todo {
-    // show
-    //매개변수 all, status(todo,done,doing)
-    // 매개변수에 해당하는 데이터 출력
-    show([element], readline) {
+    constructor(rl) {
+        this.readline = rl;
+    }
+    show(element) {
         const regExp = /^all$|^todo$|^doing$|^done$/;
-        const matchRegExp = element[0].match(regExp);
-        // if(matchRegExp === null) return printError("COMMAND",readline);
-
-        if (matchRegExp === 'all') {
-            return printall();
+        const matchRegExp = element.match(regExp);
+        if (matchRegExp === null) {
+            this.printError('COMMAND_ERROR');
+        } else if (matchRegExp[0] === 'all') {
+            this.printAll();
+        } else {
+            this.printList(matchRegExp[0]);
         }
-        printlist(matchRegExp);
     }
 
-    printall() {
+    getStatusList() {
         const listOfStatus = todoList.reduce((acc, cur) => {
-            acc[cur[status]] += cur[name];
+            if (acc[cur.status] === undefined) {
+                acc[cur.status] = [cur.name];
+            } else {
+                acc[cur.status].push(cur.name);
+            }
+            return acc;
         }, {});
-        console.log(listOfStatus);
-        // console.log(`${todoList.todo}todo, doing, done`)
+        return listOfStatus;
+    }
+    printAll() {
+        const listOfStatus = this.getStatusList();
+        let printResult = [];
+        for (let status in listOfStatus) {
+            printResult.push(`${status} : ${listOfStatus[status].length}개`);
+        }
+        console.log(`현재상태 : ${printResult.join(', ')}`);
+        this.readline.prompt();
     }
 
-    //     printList(status){
-    //         console.log(status)
-    //     }
-    //     // add
-    //     // 매개변수 name,tag
-    //     // id생성
-    //     // name과 id tag 로 만들어진 데이터 추가
-    //     // showall 1초뒤에 실행
-    //     add([name, tag],rl){
-    //         add$name$["tag1"]
-    //         tag !==tag
-    //         console err
+    printList(status) {
+        const listOfStatus = this.getStatusList();
+        const statusList = listOfStatus[`${status}`];
+        let outputString = `${status}리스트 : 총 ${statusList.length} 건 : `;
+        for (let i in statusList) {
+            outputString += statusList[i];
+            if (i < statusList.length - 1) {
+                outputString += ', ';
+            }
+        }
+        console.log(outputString);
+        this.readline.prompt();
+    }
 
-    //         id = getid();
-    //         data.push({
-    //             name
-    //             id
-    //             tag
-    //         }
+    add(name, tag) {
+        console.log(tag + '-----');
+        const regExp = /^\[\'.*\'\]$/;
+        const matchRegExp = tag.match(regExp);
+        if (matchRegExp === null) {
+            return this.printError('TAG_ERROR');
+        }
+        const tagResult = tag.replace(/\[|\'|\]/g, '').split(',');
+        const id = this.getId();
+        const newData = {
+            name: name,
+            tags: tagResult,
+            status: 'todo',
+            id: Number(id)
+        };
+        todoList.push(newData);
+        console.log(todoList);
+        setTimeout(() => {
+            this.printAll();
+        }, 1000);
+    }
 
-    //         console.log(name, id, tag)
+    getId() {
+        const id = new Date();
+        return id.toFormat('YYMMDDHHMISS');
+    }
 
-    //         settimeout(){
-    //             printall();
-    //         1000}
+    findData(id) {
+        let index;
+        const targetData = todoList.filter((element, innerIndex) => {
+            if (Number(id) === element.id) {
+                index = innerIndex;
+                return Number(id) === element.id;
+            }
+        });
 
-    //     }
+        return [targetData[0], index];
+    }
 
-    //     getid(){
-    //         return Math.random();
-    //     }
+    delete(id) {
+        const deletingData = this.findData(id);
+        if (deletingData[0] === undefined) {
+            return this.printError('ID_ERROR');
+        }
+        const index = this.findData(id)[1];
+        const deletingName = deletingData[0].name;
+        todoList.splice(index, 1);
 
-    //     // delete
-    //     // 매개변수 id
-    //     // id에 해당하는 데이터 삭제
-    //     // showall 1초뒤에 실행
-    //     // 존재하지 않는 id경우 출력
+        console.log(`${deletingName}가 ${deletingData[0].status}에서 삭제됐습니다.`);
+        setTimeout(() => {
+            this.printAll();
+        }, 1000);
+    }
 
-    //     delete([id],rl){
-    //         index = findIndex(id)
-    //         if(id === undefined){
-    //             err
-    //             console.log(존재하지 않음)
-    //             rl.prompt()
-    //         }
-    //         name = data.splice(index)
+    update(id, status) {
+        const targetData = this.findData(id)[0];
+        const index = this.findData(id)[1];
 
-    //         console.log(name, id)
+        if (targetData === undefined) {
+            return this.printError('ID_ERROR');
+        }
 
-    //         settimeout(){
-    //             printall();
-    //         1000}
-    //     }
+        if (todoList[index].status === status) {
+            return this.printError('STATUS_ERROR');
+        }
 
-    //     findIndex(id){
-    //         if(data.id === id){
-    //             return indexOfData;
-    //         }
-    //     }
+        todoList[index].status = status;
 
-    //     // update
-    //     // 매개변수 id, status
-    //     // id에 해당하는 데이터를 status로 상태 변경
-    //     // 3초 뒤에 name 이 status 로 변경되었ㅅ 출력
-    //     // 1초뒤 show all
-    //     // 존재하지 않는 id경우, 같은상태로 update경우 안내 출력
+        setTimeout(() => {
+            console.log(`"${targetData.name}"가(이) ${status}로 변경되었습니다.`);
+            setTimeout(() => {
+                this.printAll();
+            }, 1000);
+        }, 3000);
+    }
 
-    //     update([id, status], rl){
-    //         index = findIndex(id)
-    //         if(id === undefined){
-    //             err
-    //             console.log(존재하지 않음)
-    //             rl.prompt()
-    //         }
-    //         data.index.status = status;
-
-    //         settimeout(3000);
-    //         console.log(name, status)
-    //         settimeout(1000)
-    //         showall()
-    //     }
-
-    //     printError(element){
-    //         console element;
-    //     }
-    //     //모듈로 꺼내기
+    printError(error) {
+        console.log(errorMessage[error]);
+        this.readline.prompt();
+    }
 };
