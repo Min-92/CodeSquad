@@ -67,8 +67,11 @@ module.exports = class Log {
 			`"${nextData.id}"번 항목 '${nextData.name}'이(가) ${prevData.status} 에서 ${nextData.status}로 변경되었습니다.`
 		);
 	}
-
 	alterData(todoListIndex, deleteCount, data) {
-		todoList.splice(todoListIndex, deleteCount, data);
+		if(data === undefined){
+			todoList.splice(todoListIndex, deleteCount);
+		}else{
+			todoList.splice(todoListIndex, deleteCount, data);
+		}
 	}
 };
