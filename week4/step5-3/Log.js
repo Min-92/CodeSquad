@@ -1,146 +1,89 @@
-require('date-utils');
-const Log = module.require('./log.js');
-const todoLog = new Log();
-
-const commonDelaySecond = 1000;
-const updateDelaySecond = 3000;
-
-module.exports = Todo = function(todoList, rl) {
-    this.todoList = todoList;
-    this.readline = rl;
+module.exports = Log = function (undoLimit = 3, defaultIndex = -1) {
+	this.queue = [],
+	this.index = defaultIndex,
+	this.undoLimit = undoLimit;
 };
 
-Todo.prototype.show = function(element) {
-    const regExp = /^all$|^todo$|^doing$|^done$/;
-    const matchRegExp = element.match(regExp);
-    if (matchRegExp === null) {
-        throw new Error('COMMAND_ERROR');
-    } else if (matchRegExp[0] === 'all') {
-        this.printAll();
-    } else {
-        this.printList(matchRegExp[0]);
-    }
+Log.prototype.getIndex = function () {
+	return this.index;
 };
 
-Todo.prototype.getStatusList = function() {
-    const listOfStatus = this.todoList.reduce((acc, cur) => {
-        if (acc[cur.status] === undefined) {
-            acc[cur.status] = [cur.name];
-        } else {
-            acc[cur.status].push(cur.name);
-        }
-        return acc;
-    }, {});
-    return listOfStatus;
+Log.prototype.getLength = function () {
+	return this.queue.length;
 };
 
-Todo.prototype.printAll = function() {
-    const listOfStatus = this.getStatusList();
-    let printResult = [];
-    for (let status in listOfStatus) {
-        printResult.push(`${status} : ${listOfStatus[status].length}개`);
-    }
-    console.log(`현재상태 : ${printResult.join(', ')}`);
-    this.readline.prompt();
+Log.prototype.addLog = function (obj) {
+	if (this.queue.length > this.undoLimit + 1) {
+		this.queue.shift();
+	}
+
+	while (this.queue.length > this.index + 1) {
+		this.queue.pop();
+	}
+
+	this.queue[++this.index] = {
+		action: obj.action,
+		prevData: obj.prevData,
+		nextData: obj.nextData,
+		todoListIndex: obj.todoListIndex
+	};
 };
 
-Todo.prototype.printList = function(status) {
-    const listOfStatus = this.getStatusList();
-    const statusList = listOfStatus[status];
-    console.log(`${status}리스트 : 총 ${statusList.length} 건 : ${statusList.join(', ')}`);
-    this.readline.prompt();
+Log.prototype.undo = function () {
+	const action = this.queue[this.index].action;
+	const prevData = this.queue[this.index].prevData;
+	const nextData = this.queue[this.index].nextData;
+	const todoListIndex = this.queue[this.index].todoListIndex;
+	console.log(
+		`"${nextData.id}"번 항목 '${nextData.name}'이(가) ${nextData.status} 에서 ${prevData.status}로 변경되었습니다.`
+	);
+	this.index--;
+	if (action === 'add') {
+		return {
+			todoListIndex,
+			deleteCount: 1
+		};
+	} else if (action === 'delete') {
+		return {
+			todoListIndex,
+			deleteCount: 0,
+			data: prevData
+		};
+	} else if (action === 'update') {
+		return {
+			todoListIndex,
+			deleteCount: 1,
+			data: prevData
+		};
+	}
 };
 
-Todo.prototype.add = function(name, tag) {
-    if (name === undefined || tag === undefined || name === '' || tag === '') {
-        throw new Error('COMMAND_ERROR');
-    }
-    const tagResult = tag.replace(/\[|\'|\"|\]/g, '').split(',');
-    const id = this.getId();
-    const newData = {
-        name: name,
-        tags: tagResult,
-        status: 'todo',
-        id: id
-    };
-    this.todoList.push(newData);
-    const prevData = {};
-    Object.assign(prevData, newData);
-    prevData.status = '삭제';
-    console.log(`${newData.name} 1개가 추가되었습니다. (id : ${newData.id})`);
-    todoLog.addLog('add', prevData, newData, this.todoList.length - 1);
-    setTimeout(() => {
-        this.printAll();
-    }, commonDelaySecond);
-};
+Log.prototype.redo = function () {
+	this.index++;
+	const action = this.queue[this.index].action;
+	const prevData = this.queue[this.index].prevData;
+	const nextData = this.queue[this.index].nextData;
+	const todoListIndex = this.queue[this.index].todoListIndex;
 
-Todo.prototype.getId = function() {
-    const id = new Date();
-    return Number(id.toFormat('YYMMDDHHMISS'));
-};
-
-Todo.prototype.checkValidId = function(id) {
-    let index;
-    const targetData = this.todoList.filter((element, innerIndex) => {
-        if (Number(id) === element.id) {
-            index = innerIndex;
-            return Number(id) === element.id;
-        }
-    });
-    if (targetData[0] === undefined) {
-        throw new Error('ID_ERROR');
-    }
-
-    return index;
-};
-
-Todo.prototype.delete = function(id) {
-    const index = this.checkValidId(id);
-    const deletingName = this.todoList[index].name;
-
-    console.log(`${deletingName}가 ${this.todoList[index].status}에서 삭제됐습니다.`);
-    const nextData = {};
-    Object.assign(nextData, this.todoList[index]);
-    nextData.status = '삭제';
-    todoLog.addLog('delete', this.todoList[index], nextData, index);
-    this.todoList.splice(index, 1);
-    setTimeout(() => {
-        this.printAll();
-    }, commonDelaySecond);
-};
-
-Todo.prototype.update = function(id, status) {
-    if (status === undefined) {
-        throw new Error('COMMAND_ERROR');
-    }
-    const index = this.checkValidId(id);
-    const regExp = /^todo$|^doing$|^done$/;
-    const matchRegExp = status.match(regExp);
-
-    if (matchRegExp === null) {
-        throw new Error('COMMAND_ERROR');
-    } else if (this.todoList[index].status === status) {
-        throw new Error('STATUS_ERROR');
-    }
-    const prevData = {};
-    Object.assign(prevData, this.todoList[index]);
-    this.todoList[index].status = status;
-    todoLog.addLog('update', prevData, this.todoList[index], index);
-
-    setTimeout(() => {
-        console.log(`"${this.todoList[index].name}"가(이) ${status}로 변경되었습니다.`);
-        setTimeout(() => {
-            this.printAll();
-        }, commonDelaySecond);
-    }, updateDelaySecond);
-};
-
-Todo.prototype.undo = function() {
-    todoLog.undo();
-    this.readline.prompt();
-};
-
-Todo.prototype.redo = function() {
-    todoLog.redo();
-    this.readline.prompt();
+	console.log(
+		`"${nextData.id}"번 항목 '${nextData.name}'이(가) ${prevData.status} 에서 ${nextData.status}로 변경되었습니다.`
+	);
+	if (action === 'add') {
+		return {
+			todoListIndex,
+			deleteCount: 0,
+			data: nextData
+		};
+	} else if (action === 'delete') {
+		return {
+			todoListIndex,
+			deleteCount: 1
+		};
+	} else if (action === 'update') {
+		return {
+			todoListIndex,
+			deleteCount: 1,
+			data: nextData
+		};
+	}
 };
