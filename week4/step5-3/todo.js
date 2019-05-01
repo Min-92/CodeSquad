@@ -89,7 +89,6 @@ Todo.prototype.getStatus = function(index) {
 };
 
 Todo.prototype.delete = function(index) {
-	// const deletingName = this.todoList[index].name;
 	const deletingData = this.todoList[index];
 	console.log(`${deletingData.name}가 ${deletingData.status}에서 삭제됐습니다.`);
 	const nextData = Object.assign({}, this.todoList[index]);
