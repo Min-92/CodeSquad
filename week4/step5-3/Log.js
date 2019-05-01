@@ -1,7 +1,7 @@
 module.exports = Log = function (undoLimit = 3, defaultIndex = -1) {
 	this.queue = [],
-	this.index = defaultIndex,
-	this.undoLimit = undoLimit;
+		this.index = defaultIndex,
+		this.undoLimit = undoLimit;
 };
 
 Log.prototype.getIndex = function () {
@@ -12,7 +12,7 @@ Log.prototype.getLength = function () {
 	return this.queue.length;
 };
 
-Log.prototype.addLog = function (obj) {
+Log.prototype.addLog = function (logDataObject) {
 	if (this.queue.length > this.undoLimit + 1) {
 		this.queue.shift();
 	}
@@ -22,10 +22,10 @@ Log.prototype.addLog = function (obj) {
 	}
 
 	this.queue[++this.index] = {
-		action: obj.action,
-		prevData: obj.prevData,
-		nextData: obj.nextData,
-		todoListIndex: obj.todoListIndex
+		action: logDataObject.action,
+		prevData: logDataObject.prevData,
+		nextData: logDataObject.nextData,
+		todoListIndex: logDataObject.todoListIndex
 	};
 };
 
