@@ -62,6 +62,8 @@ class ArrayParser {
                 resultArray.push({type : "array", child : this.parser(inputArray, [])});
             }else if(inputData.type === 'number'){
                 resultArray.push({type : 'number', value : Number(inputData.value)});
+            }else if(inputData.type === 'boolean'){
+                resultArray.push({type : 'boolean', value : Boolean(inputData.value)});
             }else if(inputData.type === 'string'){
                 resultArray.push({type : 'string', value : String(this.removeQuotes((inputData.value)))});
             }else if(inputData.type === "arrayEndOperator" ) {
@@ -88,4 +90,4 @@ const testCode = (input) => {
 }
 
 // console.log(testCode('[123,12,[3],1]'));
-console.log(testCode("['123',12,[3,2,[1]],2,1]"));
+console.log(testCode("['abc',true,[3,2,[1]],2,1]"));
