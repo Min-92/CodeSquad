@@ -1,18 +1,16 @@
-module.exports = Log = function (undoLimit = 3, defaultIndex = -1) {
-	this.queue = [],
-		this.index = defaultIndex,
-		this.undoLimit = undoLimit;
+module.exports = Log = function(undoLimit = 3, defaultIndex = -1) {
+	(this.queue = []), (this.index = defaultIndex), (this.undoLimit = undoLimit);
 };
 
-Log.prototype.getIndex = function () {
+Log.prototype.getIndex = function() {
 	return this.index;
 };
 
-Log.prototype.getLength = function () {
+Log.prototype.getLength = function() {
 	return this.queue.length;
 };
 
-Log.prototype.addLog = function (logDataObject) {
+Log.prototype.addLog = function(logDataObject) {
 	if (this.queue.length > this.undoLimit + 1) {
 		this.queue.shift();
 	}
@@ -29,7 +27,7 @@ Log.prototype.addLog = function (logDataObject) {
 	};
 };
 
-Log.prototype.undo = function () {
+Log.prototype.undo = function() {
 	const action = this.queue[this.index].action;
 	const prevData = this.queue[this.index].prevData;
 	const nextData = this.queue[this.index].nextData;
@@ -58,7 +56,7 @@ Log.prototype.undo = function () {
 	}
 };
 
-Log.prototype.redo = function () {
+Log.prototype.redo = function() {
 	this.index++;
 	const action = this.queue[this.index].action;
 	const prevData = this.queue[this.index].prevData;

@@ -1,8 +1,8 @@
 const readline = require('readline');
-const ValidCheck = require('./validCheck');
-const Todo = require('./todo.js');
-const todoList = require('./data.js');
-const Log = require('./log.js');
+const ValidCheck = module.require('./validCheck');
+const Todo = module.require('./todo.js');
+const todoList = module.require('./data.js');
+const Log = module.require('./log.js');
 
 const rl = readline.createInterface({
 	input: process.stdin,
