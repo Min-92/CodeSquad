@@ -14,6 +14,7 @@ class ArrayParser {
 
     typeCheck(string) {
         if (string === "true" || string === "false") return this.validationCheck(string, "boolean");
+        if (string === "null") return this.validationCheck(string, "null");
         if (string[0] === "'" && string[string.length - 1] === "'") return this.validationCheck(string, "string");
         if (string === ",") return this.validationCheck(string, "separator");
         if (string === "[") return this.validationCheck(string, "arrayStartOperator");
@@ -87,6 +88,11 @@ class ArrayParser {
                     type: 'boolean',
                     value: Boolean(inputData.value)
                 });
+            } else if (inputData.type === 'null') {
+                resultArray.push({
+                    type: 'null',
+                    value: null
+                });
             } else if (inputData.type === 'string') {
                 resultArray.push({
                     type: 'string',
@@ -121,4 +127,4 @@ const testCode = (input) => {
 }
 
 // console.log(testCode('[123,12,[3],1]'));
-console.log(testCode("['123',true,[3,2,[1]],2,1]"));
+console.log(testCode("['123',true,null,[3,2,[1]],2,1]"));
