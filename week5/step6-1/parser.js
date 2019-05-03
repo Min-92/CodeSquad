@@ -20,7 +20,10 @@ class ArrayParser {
         if (string === "]") return "arrayEndOperator";
         return "number";
     }
-    
+    removeQuotes(string){
+        return string.slice(1,string.length-1);
+    }
+
     lexer(inputArray) {
         const lexerArray = [];
         inputArray.reduce((acc, value) => {
@@ -48,6 +51,7 @@ class ArrayParser {
         }, "");
         return lexerArray;
     }
+
                                         
     parser(inputArray ,resultArray = []) {
         let inputData;
@@ -57,7 +61,9 @@ class ArrayParser {
                 this.bracketStack.push("[");
                 resultArray.push({type : "array", child : this.parser(inputArray, [])});
             }else if(inputData.type === 'number'){
-                resultArray.push({type : 'number', value : inputData.value});
+                resultArray.push({type : 'number', value : Number(inputData.value)});
+            }else if(inputData.type === 'string'){
+                resultArray.push({type : 'string', value : String(this.removeQuotes((inputData.value)))});
             }else if(inputData.type === "arrayEndOperator" ) {
                 this.bracketStack.pop();
                 return resultArray;
@@ -70,7 +76,7 @@ class ArrayParser {
     parserExcuter(inputString) {
         this.inputIndex = 0;
         let result = this.parser(this.lexer(this.tokenizer(inputString)))[0];
-        this.bracketStack.length !== 0 ? result = "유효하지 않은 텍스트" : 0;
+        this.bracketStack.length !== 0 ? result = '"유효하지 않은 텍스트 입니다."' : 0;
         return result;
     }
 }
@@ -81,4 +87,5 @@ const testCode = (input) => {
     return arrParser.parserExcuter(input);
 }
 
-console.log(testCode('[123,12,[3],1]'));
+// console.log(testCode('[123,12,[3],1]'));
+console.log(testCode("['123',12,[3,2,[1]],2,1]"));
