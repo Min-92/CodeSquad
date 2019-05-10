@@ -1,6 +1,9 @@
 class ArrayParser {
     constructor() {
-        this.bracketStack = [];
+        this.arrayBracketStack = [];
+        this.keyStack = [];
+        this.objectBracketStack = [];
+        this.parentTypeStack = [];
     }
     tokenizer(inputString) {
         const tokenArray = [];
@@ -15,7 +18,9 @@ class ArrayParser {
                     tokenArray.push(inputString[i]);
                 }
             } else {
-                value += inputString[i];
+                if (inputString[i] !== " " || value !== "") {
+                    value += inputString[i];
+                }
             }
         }
         return this.removeBlank(tokenArray);
@@ -80,36 +85,82 @@ class ArrayParser {
 
     parser(inputArray) {
         const resultArray = [];
+        const resultObject = {};
         let inputData;
         while (inputArray.length > 0) {
             inputData = inputArray.shift();
             if (inputData.type === "arrayStartOperator") {
-                this.bracketStack.push("[");
-                resultArray.push({
-                    type: "array",
-                    child: this.parser(inputArray)
-                });
+                this.arrayBracketStack.push("[");
+                if (this.parentTypeStack[this.parentTypeStack.length - 1] === "object") {
+                    this.parentTypeStack.push("array");
+                    resultObject[this.keyStack.pop()] = {
+                        type: "array",
+                        child: this.parser(inputArray)
+                    }
+                } else {
+                    this.parentTypeStack.push("array");
+                    resultArray.push({
+                        type: "array",
+                        child: this.parser(inputArray)
+                    });
+                }
             } else if (inputData.type === "arrayEndOperator") {
-                this.bracketStack.pop();
+                this.arrayBracketStack.pop();
+                this.parentTypeStack.pop();
                 return resultArray;
-            } else if (inputData.type === 'separator') {
+            } else if (inputData.type === "objectEndOperator") {
+                this.objectBracketStack.pop();
+                this.parentTypeStack.pop();
+                return resultObject;
+            } else if (inputData.type === "objectStartOperator") {
+                if (this.parentTypeStack[this.parentTypeStack.length - 1] === "array") {
+                    this.parentTypeStack.push("object");
+                    this.objectBracketStack.push("{");
+                    resultArray.push({
+                        type: "object",
+                        child: this.parser(inputArray)
+                    });
+                } else {
+                    this.parentTypeStack.push("object");
+                    this.objectBracketStack.push("{");
+                    if (this.keyStack.length === 0) {
+                        resultObject.type = "object";
+                        resultObject.child = this.parser(inputArray);
+                    } else {
+                        resultObject[this.keyStack.pop()] = {
+                            type: "object",
+                            child: this.parser(inputArray)
+                        }
+                    }
+                }
+            } else if (inputData.type === 'separator' || inputData.type === "colone") {
                 continue;
             } else {
-                resultArray.push({
-                    type: inputData.type,
-                    value: inputData.value
-                });
+                if (this.parentTypeStack[this.parentTypeStack.length - 1] === "object") {
+                    if (this.keyStack.length === 0) {
+                        this.keyStack.push(inputData.value);
+                    } else {
+                        resultObject[this.keyStack.pop()] = {
+                            type: inputData.type,
+                            value: inputData.valuea
+                        }
+                    }
+                } else {
+                    resultArray.push({
+                        type: inputData.type,
+                        value: inputData.value
+                    });
+                }
             }
         }
-
-        return resultArray;
+        return resultArray[0] === undefined ? resultObject : resultArray[0]
     }
 
     parserExcuter(inputString) {
         try {
             this.inputIndex = 0;
-            let result = this.parser(this.lexer(this.tokenizer(inputString)))[0];
-            result = this.bracketStack.length !== 0 ? "유효하지 않은 텍스트" : result;
+            let result = this.parser(this.lexer(this.tokenizer(inputString)));
+            // result = this.bracketStack.length !== 0 ? "유효하지 않은 텍스트" : result;
             return result;
         } catch (error) {
             console.log(error.message);
@@ -120,9 +171,14 @@ class ArrayParser {
 
 const arrParser = new ArrayParser();
 const testCode = (input) => {
+    // return arrParser.lexer(arrParser.tokenizer(input));
     return arrParser.parserExcuter(input);
 }
 
-console.log(testCode("['1a3',[22,23,[11,[112233],112],55],33]"));
-console.log(testCode("['1a3',[22,23,[11,[112233],112],55],3d3]"));
-console.log(testCode("['1'a3',[22,23,[11,[112233],112],55],33]"));
+console.dir(testCode("[22,{'abc':12},33]"));
+console.dir(testCode("[22,{'ab' :  {'abab' : 1}},33]"));
+console.dir(testCode("[{'ab' : {'abab' : 1}},33]"));
+console.dir(testCode("[{'ab' : [1,2,3]},33]"));
+console.dir(testCode("{'ab' : [1,2,3]}"));
+// console.log(testCode("['1a3',[22,23,[11,[112233],112],55],33]"));
+// console.log(testCode("['1'a3',[22,23,[11,[112233],112],55],33]"));
