@@ -148,9 +148,21 @@ class ArrayParser {
         }
     }
 
+    addLiteralData(inputData,inputArray,resultArray,resultObject){
+        if (this.getParentType() === "object") {
+            if (this.stacks.keyStack.length === 0) {
+                this.stacks.keyStack.push(inputData.value);
+            } else {
+                resultObject[this.stacks.keyStack.pop()] = this.makeDataObject(inputData,inputArray);
+            }
+        } else {
+            resultArray.push(this.makeDataObject(inputData,inputArray));
+        }
+    }
+
     parser(inputArray) {
-        let resultArray = [];
-        let resultObject = {};
+        const resultArray = [];
+        const resultObject = {};
         let inputData;
         while (inputArray.length > 0) {
             inputData = inputArray.shift();
@@ -169,15 +181,7 @@ class ArrayParser {
             } else if (inputData.type === 'separator' || inputData.type === "colone") {
                 continue;
             } else {
-                if (this.getParentType() === "object") {
-                    if (this.stacks.keyStack.length === 0) {
-                        this.stacks.keyStack.push(inputData.value);
-                    } else {
-                        resultObject[this.stacks.keyStack.pop()] = this.makeDataObject(inputData,inputArray);
-                    }
-                } else {
-                    resultArray.push(this.makeDataObject(inputData,inputArray));
-                }
+                this.addLiteralData(inputData,inputArray,resultArray,resultObject);
             }
         }
         return resultArray[0] === undefined ? resultObject : resultArray[0]
@@ -187,7 +191,7 @@ class ArrayParser {
         try {
             this.inputIndex = 0;
             let result = this.parser(this.lexer(this.tokenizer(inputString)));
-            result = this.stacks.arrayBracketStack.length !== 0 ? "유효하지 않은 텍스트" : result;
+            result = (this.stacks.arrayBracketStack.length !== 0 || this.stacks.objectBracketStack.length !== 0) ? "유효하지 않은 텍스트" : result;
             return result;
         } catch (error) {
             console.log(error.message);
@@ -207,15 +211,7 @@ string[3] = '{"type":"array","child":[{"type":"object","child":{"ab":{"type":"ar
 string[4] = '{"type":"object","child":{"ab":{"type":"array","child":[{"type":"number","value":1},{"type":"number","value":2},{"type":"number","value":3}]}}}';
 
 console.log(string[0] === JSON.stringify(testCode("[22,{'abc':12},33]")));
-console.log(string[1] ===JSON.stringify(testCode("[22,{'ab' :  {'abab' : 1}},33]")));
-console.log(string[2] ===JSON.stringify(testCode("[{'ab' : {'abab' : 1}},33]")));
-console.log(string[3] ===JSON.stringify(testCode("[{'ab' : [1,2,3]},33]")));
-console.log(string[4] ===JSON.stringify(testCode("{'ab' : [1,2,3]}")));
-
-// console.dir(testCode("[22,{'abc':12},33]"));
-// console.dir(testCode("[22,{'ab' :  {'abab' : 1}},33]"));
-// console.dir(testCode("[{'ab' : {'abab' : 1}},33]"));
-// console.dir(testCode("[{'ab' : [1,2,3]},33]"));
-// console.dir(testCode("{'ab' : [1,2,3]}"));
-// console.log(testCode("['1a3',[22,23,[11,[112233],112],55],33]"));
-// console.log(testCode("['1'a3',[22,23,[11,[112233],112],55],33]"));
+console.log(string[1] === JSON.stringify(testCode("[22,{'ab' :  {'abab' : 1}},33]")));
+console.log(string[2] === JSON.stringify(testCode("[{'ab' : {'abab' : 1}},33]")));
+console.log(string[3] === JSON.stringify(testCode("[{'ab' : [1,2,3]},33]")));
+console.log(string[4] === JSON.stringify(testCode("{'ab' : [1,2,3]}")));
