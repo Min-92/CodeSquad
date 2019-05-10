@@ -13,14 +13,32 @@ class ArrayParser {
     }
 
     typeCheck(string) {
-        if (string === "true" || string === "false") return "boolean";
-        if (string[0] === "'" && string[string.length - 1] === "'") return "string";
-        if (string === ",") return "separator";
-        if (string === "[") return "arrayStartOperator"
-        if (string === "]") return "arrayEndOperator";
-        return "number";
+        if (string === "true" || string === "false") return this.validationCheck(string, "boolean");
+        if (string === "null") return this.validationCheck(string, "null");
+        if (string[0] === "'" && string[string.length - 1] === "'") return this.validationCheck(string, "string");
+        if (string === ",") return this.validationCheck(string, "separator");
+        if (string === "[") return this.validationCheck(string, "arrayStartOperator");
+        if (string === "]") return this.validationCheck(string, "arrayEndOperator");
+        return this.validationCheck(string, "number");
     }
-    
+
+    removeQuotes(string) {
+        return string.slice(1, string.length - 1);
+    }
+
+    validationCheck(element, type) {
+        if (type === "number") {
+            if (isNaN(Number(element))) throw new Error(`${element}는 알수 없는 타입입니다.`);
+            return type;
+        }
+        if (type === "string") {
+            if (this.removeQuotes(element).includes("'")) throw new Error(`${element}는 올바른 문자열이 아닙니다.`);
+            return type;
+        }
+        return type;
+    }
+
+
     lexer(inputArray) {
         const lexerArray = [];
         inputArray.reduce((acc, value) => {
@@ -48,17 +66,39 @@ class ArrayParser {
         }, "");
         return lexerArray;
     }
-                                        
-    parser(inputArray ,resultArray = []) {
+
+
+    parser(inputArray, resultArray = []) {
         let inputData;
-        while(inputArray.length > 0){
+        while (inputArray.length > 0) {
             inputData = inputArray.shift();
-            if(inputData.type === "arrayStartOperator" ){
+            if (inputData.type === "arrayStartOperator") {
                 this.bracketStack.push("[");
-                resultArray.push({type : "array", child : this.parser(inputArray, [])});
-            }else if(inputData.type === 'number'){
-                resultArray.push({type : 'number', value : inputData.value});
-            }else if(inputData.type === "arrayEndOperator" ) {
+                resultArray.push({
+                    type: "array",
+                    child: this.parser(inputArray, [])
+                });
+            } else if (inputData.type === 'number') {
+                resultArray.push({
+                    type: 'number',
+                    value: Number(inputData.value)
+                });
+            } else if (inputData.type === 'boolean') {
+                resultArray.push({
+                    type: 'boolean',
+                    value: Boolean(inputData.value)
+                });
+            } else if (inputData.type === 'null') {
+                resultArray.push({
+                    type: 'null',
+                    value: null
+                });
+            } else if (inputData.type === 'string') {
+                resultArray.push({
+                    type: 'string',
+                    value: String(this.removeQuotes((inputData.value)))
+                });
+            } else if (inputData.type === "arrayEndOperator") {
                 this.bracketStack.pop();
                 return resultArray;
             }
@@ -68,12 +108,17 @@ class ArrayParser {
     }
 
     parserExcuter(inputString) {
+        try{
         this.inputIndex = 0;
         let result = this.parser(this.lexer(this.tokenizer(inputString)))[0];
-        this.bracketStack.length !== 0 ? result = "유효하지 않은 텍스트" : 0;
+        this.bracketStack.length !== 0 ? result = '"유효하지 않은 텍스트 입니다."' : 0;
         return result;
+        }catch(error){
+        console.log(error.message);
+        }
     }
 }
+
 
 
 const arrParser = new ArrayParser();
@@ -81,4 +126,5 @@ const testCode = (input) => {
     return arrParser.parserExcuter(input);
 }
 
-console.log(testCode('[123,12,[3],1]'));
+// console.log(testCode('[123,12,[3],1]'));
+console.log(testCode("['123',true,null,[3,2,[1]],2,1]"));
