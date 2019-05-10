@@ -1,5 +1,6 @@
 class ArrayParser {
     constructor() {
+        //오브젝트로 묶자
         this.arrayBracketStack = [];
         this.keyStack = [];
         this.objectBracketStack = [];
@@ -83,6 +84,10 @@ class ArrayParser {
         return lexerArray;
     }
 
+    getParentType(){
+        return this.parentTypeStack[this.parentTypeStack.length-1];
+    }
+
     parser(inputArray) {
         const resultArray = [];
         const resultObject = {};
@@ -91,7 +96,7 @@ class ArrayParser {
             inputData = inputArray.shift();
             if (inputData.type === "arrayStartOperator") {
                 this.arrayBracketStack.push("[");
-                if (this.parentTypeStack[this.parentTypeStack.length - 1] === "object") {
+                if (this.getParentType() === "object") {
                     this.parentTypeStack.push("array");
                     resultObject[this.keyStack.pop()] = {
                         type: "array",
@@ -113,7 +118,7 @@ class ArrayParser {
                 this.parentTypeStack.pop();
                 return resultObject;
             } else if (inputData.type === "objectStartOperator") {
-                if (this.parentTypeStack[this.parentTypeStack.length - 1] === "array") {
+                if (this.getParentType() === "array") {
                     this.parentTypeStack.push("object");
                     this.objectBracketStack.push("{");
                     resultArray.push({
@@ -136,7 +141,7 @@ class ArrayParser {
             } else if (inputData.type === 'separator' || inputData.type === "colone") {
                 continue;
             } else {
-                if (this.parentTypeStack[this.parentTypeStack.length - 1] === "object") {
+                if (this.getParentType() === "object") {
                     if (this.keyStack.length === 0) {
                         this.keyStack.push(inputData.value);
                     } else {
