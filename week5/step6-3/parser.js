@@ -18,10 +18,10 @@ class ArrayParser {
 
     }
 
-    checkOperator(charactor){
+    isOperator(character){
         let result = false;
         for(let i in this.operators){
-            if(i === charactor){
+            if(i === character){
                 result = true;
             }
         }
@@ -32,7 +32,7 @@ class ArrayParser {
         const tokenArray = [];
         let value = "";
         for (let i = 0; i < inputString.length; i++) {
-            if (this.checkOperator(inputString[i])) {
+            if (this.isOperator(inputString[i])) {
                 if (value !== "") {
                     tokenArray.push(value);
                     tokenArray.push(inputString[i]);
@@ -57,7 +57,7 @@ class ArrayParser {
     }
 
     typeCheck(string) {
-        if(this.checkOperator(string)){
+        if(this.isOperator(string)){
             return this.operators[string];
         }
         if (string === "true" || string === "false") return "boolean";
