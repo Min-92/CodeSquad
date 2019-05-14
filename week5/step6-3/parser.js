@@ -31,20 +31,20 @@ class ArrayParser {
     tokenizer(inputString) {
         const tokenArray = [];
         let value = "";
-        for (let i = 0; i < inputString.length; i++) {
-            if (this.isOperator(inputString[i])) {
+        for (let char of inputString) {
+            if (this.isOperator(char)) {
                 if (value !== "") {
                     tokenArray.push(value);
-                    tokenArray.push(inputString[i]);
+                    tokenArray.push(char);
                     value = "";
                 } else {
-                    tokenArray.push(inputString[i]);
+                    tokenArray.push(char);
                 }
             } else {
-                if (inputString[i] !== " " || value !== "") {
-                    value += inputString[i];
+                if (char !== " " || value !== "") {
+                    value += char;
                 }
-            }
+            } 
         }
         return this.removeBlank(tokenArray);
     }
